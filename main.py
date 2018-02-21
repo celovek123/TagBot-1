@@ -36,12 +36,12 @@ def add_tag(bot, update):
         chat_id_to_mp3[update.message.chat_id].song = " ".join(tag[1:])
     elif tag[0] == 'album':
         chat_id_to_mp3[update.message.chat_id].album = " ".join(tag[1:])
-    elif tag[0] == 'genre':
-        chat_id_to_mp3[update.message.chat_id].genre = " ".join(tag[1:])
+    # elif tag[0] == 'genre':
+    #     chat_id_to_mp3[update.message.chat_id].genre = " ".join(tag[1:])
     elif tag[0] == 'track':
         chat_id_to_mp3[update.message.chat_id].track = " ".join(tag[1:])
     else:
-        bot.send_message(chat_id=update.message.chat_id, text="Invalid tag, valid tags are: artist, title, album, genre, track")    
+        bot.send_message(chat_id=update.message.chat_id, text="Invalid tag, valid tags are: artist, title, album and track")    
         return
     
     chat_id_to_mp3[update.message.chat_id].save()
