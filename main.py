@@ -6,11 +6,16 @@ from telegram import Audio, File
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 from mp3_tagger import MP3File
 
-logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO, filename='logs.log')
+logging.basicConfig()
+
+logger = logging.getLogger(__name__)
 
 chat_id_to_mp3 = {}
 
 def done(bot, update):
+    logger.info("[Command] done")
+    logger.info("[ChatID] " + str(update.message.chat_id))
     bot.send_message(chat_id=update.message.chat_id, text="Sending modified audio...")
     bot.send_audio(chat_id=update.message.chat_id, audio=open(str(update.message.chat_id) + ".mp3", 'rb'), timeout=500)
     del chat_id_to_mp3[update.message.chat_id]
@@ -18,6 +23,8 @@ def done(bot, update):
     bot.send_message(chat_id=update.message.chat_id, text="All done.")
 
 def add_tag(bot, update):
+    logger.info("[Handler] add_tag")
+    logger.info("[ChatID] " + str(update.message.chat_id))
     if update.message.chat_id not in chat_id_to_mp3:
         bot.send_message(chat_id=update.message.chat_id, text="Please wait until the file is downloaded and retry")    
         return
@@ -41,6 +48,8 @@ def add_tag(bot, update):
     bot.send_message(chat_id=update.message.chat_id, text=tag[0] + " Has been set to: " + " ".join(tag[1:]))
 
 def audio(bot: telegram.Bot, update):
+    logger.info("[Handler] audio")
+    logger.info("[ChatID] " + str(update.message.chat_id))
     bot.send_message (chat_id=update.message.chat_id, text="Message recieved, Downloading file...")
     audio_file = bot.getFile(update.message.audio.file_id)
     # print ("File ID:", audio_file.file_id)
@@ -50,6 +59,8 @@ def audio(bot: telegram.Bot, update):
     chat_id_to_mp3[update.message.chat_id] = MP3File(str(update.message.chat_id) + ".mp3")
 
 def unknown(bot: telegram.Bot, update):
+    logger.info("[Handler] unknown")
+    logger.info("[ChatID] " + str(update.message.chat_id))
     bot.send_message(chat_id=update.message.chat_id, text="Sorry, I didn't understand that command.")
     
 
@@ -69,4 +80,4 @@ if __name__ == '__main__':
     unknown_handler = MessageHandler(Filters.command, unknown)
     dispatcher.add_handler(unknown_handler)
 
-    updater.start_polling()
+    updater.start_polling(timeout=100)
