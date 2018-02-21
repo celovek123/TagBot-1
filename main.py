@@ -4,7 +4,7 @@ import os
 import telegram.replykeyboardmarkup
 from telegram import Audio, File
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
-from mp3_tagger import MP3File
+import eyed3
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO, filename='logs.log')
 logging.basicConfig()
@@ -31,20 +31,20 @@ def add_tag(bot, update):
 
     tag = update.message.text.split()
     if tag[0] == 'artist':
-        chat_id_to_mp3[update.message.chat_id].artist = " ".join(tag[1:])
+        chat_id_to_mp3[update.message.chat_id].tag.artist = " ".join(tag[1:])
     elif tag[0] == 'title':
-        chat_id_to_mp3[update.message.chat_id].song = " ".join(tag[1:])
+        chat_id_to_mp3[update.message.chat_id].tag.title = " ".join(tag[1:])
     elif tag[0] == 'album':
-        chat_id_to_mp3[update.message.chat_id].album = " ".join(tag[1:])
-    # elif tag[0] == 'genre':
-    #     chat_id_to_mp3[update.message.chat_id].genre = " ".join(tag[1:])
+        chat_id_to_mp3[update.message.chat_id].tag.album = " ".join(tag[1:])
+    elif tag[0] == 'genre':
+        chat_id_to_mp3[update.message.chat_id].tag.genre = " ".join(tag[1:])
     elif tag[0] == 'track':
-        chat_id_to_mp3[update.message.chat_id].track = " ".join(tag[1:])
+        chat_id_to_mp3[update.message.chat_id].tag.track_num = " ".join(tag[1:])
     else:
         bot.send_message(chat_id=update.message.chat_id, text="Invalid tag, valid tags are: artist, title, album and track")    
         return
     
-    chat_id_to_mp3[update.message.chat_id].save()
+    chat_id_to_mp3[update.message.chat_id].tag.save()
     bot.send_message(chat_id=update.message.chat_id, text=tag[0] + " Has been set to: " + " ".join(tag[1:]))
 
 def audio(bot: telegram.Bot, update):
@@ -56,7 +56,7 @@ def audio(bot: telegram.Bot, update):
     # print ("Downloading file...")
     audio_file.download(str(update.message.chat_id) + ".mp3")
     bot.send_message (chat_id=update.message.chat_id, text="Ready to accept tags.")
-    chat_id_to_mp3[update.message.chat_id] = MP3File(str(update.message.chat_id) + ".mp3")
+    chat_id_to_mp3[update.message.chat_id] = eyed3.load(str(update.message.chat_id) + ".mp3")
 
 def unknown(bot: telegram.Bot, update):
     logger.info("[Handler] unknown")
