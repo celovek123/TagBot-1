@@ -1,5 +1,6 @@
 import config
 import logging
+import os
 import telegram.replykeyboardmarkup
 from telegram import Audio, File
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
@@ -7,15 +8,20 @@ from mp3_tagger import MP3File
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 
-chat_id_to_file = {}
 chat_id_to_mp3 = {}
 
 def done(bot, update):
-    print("Sending modified audio...")
+    bot.send_message(chat_id=update.message.chat_id, text="Sending modified audio...")
     bot.send_audio(chat_id=update.message.chat_id, audio=open(str(update.message.chat_id) + ".mp3", 'rb'), timeout=500)
-    print("All done.")
+    del chat_id_to_mp3[update.message.chat_id]
+    os.remove(str(update.message.chat_id) + ".mp3")
+    bot.send_message(chat_id=update.message.chat_id, text="All done.")
 
 def add_tag(bot, update):
+    if update.message.chat_id not in chat_id_to_mp3:
+        bot.send_message(chat_id=update.message.chat_id, text="Please wait until the file is downloaded and retry")    
+        return
+
     tag = update.message.text.split()
     if tag[0] == 'artist':
         chat_id_to_mp3[update.message.chat_id].artist = " ".join(tag[1:])
@@ -36,10 +42,10 @@ def add_tag(bot, update):
 
 def audio(bot: telegram.Bot, update):
     bot.send_message (chat_id=update.message.chat_id, text="Message recieved, Downloading file...")
-    chat_id_to_file[update.message.chat_id] = bot.getFile(update.message.audio.file_id)
-    print ("File ID:", chat_id_to_file[update.message.chat_id].file_id)
-    print ("Downloading file...")
-    chat_id_to_file[update.message.chat_id].download(str(update.message.chat_id) + ".mp3")
+    audio_file = bot.getFile(update.message.audio.file_id)
+    # print ("File ID:", audio_file.file_id)
+    # print ("Downloading file...")
+    audio_file.download(str(update.message.chat_id) + ".mp3")
     bot.send_message (chat_id=update.message.chat_id, text="Ready to accept tags.")
     chat_id_to_mp3[update.message.chat_id] = MP3File(str(update.message.chat_id) + ".mp3")
 
